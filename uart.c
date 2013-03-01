@@ -55,7 +55,7 @@ int uart_read_nr()
 	
 	while(1)
 	{
-		while(!UCSRA & (1<<RXC));
+		while(!(UCSRA & (1<<RXC)));
 		c = uart_getchar();
 		if(c == '\r' || c == '\n')
 			break;

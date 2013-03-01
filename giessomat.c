@@ -127,7 +127,8 @@ void print_menu()
 		get_flower_name(i-1, name);
 		printf(" %d - %s\r\n", i, name); 
 	}		
-	uart_puts_P(PSTR(" s - alle Sensorwerte anzeigen\r\n"));
+	uart_puts_P(PSTR(" s - Sensorwerte anzeigen\r\n"));
+	uart_puts_P(PSTR(" c - Sensorwerte -> CSV\r\n"));
 	uart_puts_P(PSTR(" k - aktuelle Konfiguration anzeigen\r\n"));
 	uart_puts_P(PSTR(" u - Uhr stellen\r\n\n"));
 }
@@ -136,22 +137,97 @@ void print_adcs()
 {
 	char i;
 	unsigned char sec = 0;
-	
+
 	while(!uart_is_rx())
 	{
 		if(zeit.sec != sec)
 		{
 			autogiess();
-			uart_puts_P(PSTR("\r\nSensorwerte:"));
+			uart_puts_P(PSTR("\r\n"));
+			print_time(&zeit);
 			for(i=0; i<6; i++)
 			{
 				uint16_t freq = get_freq(i);
-				printf("%5u0Hz ", freq);
+				printf(", %5u0", freq);
 			}
 			sec = zeit.sec;
 		}
 	}
 	uart_getchar();
+}
+
+void print_csv()
+{
+	int i;
+	unsigned char sec = 0;
+	char name[16];
+	uint32_t wsum[6];
+	char pump_on[6];
+	int mincount = 0;
+
+	uart_puts_P(PSTR("\r\nCSV output. Press ESC to end\r\n"));
+
+	while(zeit.sec != 0)
+	{
+		if(uart_is_rx())
+		{
+			char uart_in = uart_getchar();
+			if(uart_in == 0x1b)
+				return;
+		}
+	}
+
+	printf(PSTR("\nZeit"));
+	for(i=0; i<6; i++)
+	{
+		get_flower_name(i, name);
+		printf(";%6s;", name);
+		wsum[i] = 0;
+		pump_on[i] = 0;
+	}
+
+	while(1)
+	{
+		if(zeit.sec != sec)
+		{
+			autogiess();
+			sec = zeit.sec;
+			for(i=0; i<6; i++)
+			{
+				uint16_t freq = get_freq(i);
+				wsum[i] += (uint32_t)freq;
+
+				if(pump_status(i) != 0)
+					pump_on[i] = 1;
+			}
+
+			if(sec == 0)
+			{
+				if(mincount == 10)
+				{
+					uart_puts_P("\n");
+					print_time(&zeit);
+					for(i=0; i<6; i++)
+					{
+						uint32_t mw = wsum[i] / 60;
+						printf(";%6u;%d", (uint16_t)mw, pump_on[i]);
+						wsum[i] = 0;
+						pump_on[i] = 0;
+					}
+					mincount = 0;
+				}
+				else
+					mincount++;
+			}
+		}
+
+		if(uart_is_rx())
+		{
+			char uart_in = uart_getchar();
+			if(uart_in == 0x1b)
+				break;
+		}
+	}
 }
 
 void print_config()
@@ -249,7 +325,7 @@ void set_time()
 	
 void print_flower_setup(unsigned char index, struct eeprom_giess* pGiess)
 {
-	printf("\r\n\n** %d. %s **\r\n", index, pGiess->name);
+	printf("\r\n\n** %d. %s **\r\n", index+1, pGiess->name);
 	uart_puts_P(PSTR(" n - Blumennamen aendern\r\n"));
 	uart_puts_P(PSTR(" i - Pumpe ein\r\n"));
 	uart_puts_P(PSTR(" o - Pumpe aus\r\n"));
@@ -375,7 +451,7 @@ int main (void)
 	TIMSK = 0;
 	Clock_Init();
 
-	// Multiplexer Ausgänge
+	// Multiplexer Ausgaenge
 	PORTC = 0;
 	DDRC = 0x07;
 
@@ -424,7 +500,10 @@ int main (void)
 				
 			if(uart_in == 'u')
 				set_time();		
-					
+
+			if(uart_in == 'c')
+				print_csv();
+
 			print_menu();	
 		}
 	}

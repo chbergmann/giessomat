@@ -67,7 +67,12 @@ uint16_t get_freq(unsigned char port)
 	return freq_in[port];
 }
 
-SIGNAL (SIG_OVERFLOW0)
+#ifndef TIMER0_OVF_vect
+// Für ältere WinAVR Versionen z.B. WinAVR-20071221
+#define TIMER0_OVF_vect TIMER0_OVF0_vect
+#endif
+
+ISR (TIMER0_OVF_vect)
 {
 	TCNT0 = -125;  // reload
 
