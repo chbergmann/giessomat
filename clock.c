@@ -110,7 +110,7 @@ SIGNAL (SIG_OVERFLOW0)
 				{
 					zeit.hour = 0;
 					zeit.day++;
-					if(zeit.day > days_in_month[zeit.month])
+					if(zeit.day > days_in_month[zeit.month-1])
 					{
 						zeit.day = 1;
 						zeit.month++;

@@ -38,7 +38,7 @@ HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0
 OBJECTS = giessomat.o uart.o clock.o 
 
 ## Build
-all: $(TARGET) giessomat.hex giessomat.eep
+all: $(TARGET) giessomat.hex
 	avr-size giessomat.elf
 
 ## Compile
@@ -78,8 +78,12 @@ clean:
 
 #Programmer
 download: giessomat.hex
-	avrdude -p m8 -c pony-stk200 -U flash:w:giessomat.hex:i
+	#avrdude -p m8 -c pony-stk200 -U flash:w:giessomat.hex:i
+	avrdude -p m8 -c avrispmkII -P usb -U eeprom:r:giessomat.eep:i
+	avrdude -p m8 -c avrispmkII -P usb -U flash:w:giessomat.hex:i
+	avrdude -p m8 -c avrispmkII -P usb -D -U eeprom:w:giessomat.eep:i
 	
 upload:
-	avrdude -p m8 -c pony-stk200 -U flash:r:backup.hex:i
-	
+	#avrdude -p m8 -c pony-stk200 -U flash:r:backup.hex:i
+	avrdude -p m8 -c avrispmkII -P usb -U flash:r:backup.hex:i
+

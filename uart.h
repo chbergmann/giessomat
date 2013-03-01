@@ -19,10 +19,10 @@ int uart_read_nr();
 void uart_puts_P(const char *str);
 
 //Die Baud_Rate der Seriellen Schnittstelle
-//#define BAUD_RATE 9600		//Baud Rate f�r die Serielle Schnittstelle	
+//#define BAUD_RATE 9600		//Baud Rate f�r die Serielle Schnittstelle
 //#define BAUD_RATE 14400		//Baud Rate f�r die Serielle Schnittstelle	
 //#define BAUD_RATE 28800		//Baud Rate f�r die Serielle Schnittstelle	
-#define BAUD_RATE 38400		//Baud Rate f�r die Serielle Schnittstelle	
+#define BAUD_RATE 38400		//Baud Rate f�r die Serielle Schnittstelle
 //#define BAUD_RATE 57600		//Baud Rate f�r die Serielle Schnittstelle	
 
 #define BAUD_VALUE	(F_CPU / (BAUD_RATE * 16L) - 1)
