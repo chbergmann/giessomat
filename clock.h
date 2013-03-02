@@ -17,10 +17,11 @@ struct time_st
 	unsigned char sec;
 	unsigned char min;
 	unsigned char hour;
-	int day;
-	int month;
-	int sec_cnt;
-	int hour_cnt;
+	unsigned char day;
+	unsigned char month;
+	unsigned char year;
+	unsigned char sec_cnt;
+	unsigned char hour_cnt;
 };
 
 extern struct time_st zeit;

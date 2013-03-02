@@ -177,7 +177,7 @@ void print_csv()
 		}
 	}
 
-	printf(PSTR("\nZeit"));
+	printf(PSTR("Zeit"));
 	for(i=0; i<6; i++)
 	{
 		get_flower_name(i, name);
@@ -185,6 +185,7 @@ void print_csv()
 		wsum[i] = 0;
 		pump_on[i] = 0;
 	}
+	printf(PSTR("\n"));
 
 	while(1)
 	{
@@ -203,21 +204,27 @@ void print_csv()
 
 			if(sec == 0)
 			{
-				if(mincount == 10)
+				//if(mincount == 10)
 				{
-					uart_puts_P("\n");
-					print_time(&zeit);
+					printf("'20%02d-%02d-%02d %02d:%02d'",
+								zeit.year,
+								zeit.month,
+								zeit.day,
+								zeit.hour,
+								zeit.min);
+
 					for(i=0; i<6; i++)
 					{
 						uint32_t mw = wsum[i] / 60;
-						printf(";%6u;%d", (uint16_t)mw, pump_on[i]);
+						printf(";%06u;%d", (uint16_t)mw, pump_on[i]);
 						wsum[i] = 0;
 						pump_on[i] = 0;
 					}
 					mincount = 0;
+					printf(PSTR("\n"));
 				}
-				else
-					mincount++;
+				//else
+				//	mincount++;
 			}
 		}
 
@@ -293,9 +300,10 @@ void print_config()
 
 void print_time(struct time_st *pTime)
 {
-	printf("%02d.%s. %02d:%02d:%02d", 
+	printf("%02d.%s.20%02d %02d:%02d:%02d",
 			pTime->day, 
 			monat[pTime->month-1],
+			pTime->year,
 			pTime->hour, 
 			pTime->min, 
 			pTime->sec);
@@ -304,6 +312,8 @@ void print_time(struct time_st *pTime)
 void set_time()
 {
 	int newtick;
+	uart_puts_P(PSTR("\r\nJahr ? 20"));
+	zeit.year = uart_read_nr();
 	uart_puts_P(PSTR("\r\nMonat (1-12) ? "));
 	zeit.month = uart_read_nr();	
 	uart_puts_P(PSTR("\r\nTag ? "));

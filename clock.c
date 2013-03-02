@@ -113,14 +113,21 @@ ISR (TIMER0_OVF_vect)
 				zeit.hour_cnt++;
 				if(zeit.hour >= 24)
 				{
+					int days = days_in_month[zeit.month-1];
+					if(zeit.month == 2 && (zeit.year & 0x3) == 0)
+						days = 29;
+
 					zeit.hour = 0;
 					zeit.day++;
-					if(zeit.day > days_in_month[zeit.month-1])
+					if(zeit.day > days)
 					{
 						zeit.day = 1;
 						zeit.month++;
 						if(zeit.month > 12)
+						{
 							zeit.month = 1;
+							zeit.year++;
+						}
 					}
 				}
 			}
