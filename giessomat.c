@@ -24,6 +24,7 @@ struct time_st zuletzt_gegossen[2][6];
 
 void get_flower_name(unsigned char index, char* name);
 void print_time(struct time_st *pTime);
+void print_time2();
 
 
 void switch_pump(unsigned char index, char on_off)
@@ -112,8 +113,9 @@ void get_flower_name(unsigned char index, char* name)
 	name[15] = 0;
 	if(name[0] < 0x20)
 	{
-		strcpy(name, "Blume  ");
-		name[6] = index+'1';
+		strcpy(name, "Blume");
+		name[5] = index+'1';
+		name[6] = 0;
 	}
 }
 	
@@ -177,15 +179,22 @@ void print_csv()
 		}
 	}
 
-	printf(PSTR("Zeit"));
+	uart_puts_P(PSTR(";Zeit"));
 	for(i=0; i<6; i++)
 	{
 		get_flower_name(i, name);
-		printf(";%6s;", name);
+		printf(";%s", name);
 		wsum[i] = 0;
 		pump_on[i] = 0;
 	}
-	printf(PSTR("\n"));
+	uart_puts_P(PSTR("\r\n#P;"));
+	print_time2();
+	for(i=0; i<6; i++)
+	{
+		uint16_t schwelle = 0;
+		eeprom_read_block(&schwelle, &gpEEPROM[i].pump_on, sizeof(schwelle));
+		printf(";%u", schwelle);
+	}
 
 	while(1)
 	{
@@ -204,27 +213,39 @@ void print_csv()
 
 			if(sec == 0)
 			{
-				//if(mincount == 10)
+				if(mincount == 10)
 				{
-					printf("'20%02d-%02d-%02d %02d:%02d'",
-								zeit.year,
-								zeit.month,
-								zeit.day,
-								zeit.hour,
-								zeit.min);
+					int pumped = 0;
+					uart_puts_P(PSTR("\r\n#S;"));
+					print_time2();
 
 					for(i=0; i<6; i++)
 					{
-						uint32_t mw = wsum[i] / 60;
-						printf(";%06u;%d", (uint16_t)mw, pump_on[i]);
+						uint32_t mw = wsum[i] / 600;
+						printf(";%u", (uint16_t)mw);
 						wsum[i] = 0;
-						pump_on[i] = 0;
+						if(pump_on[i])
+							pumped = 1;
+					}
+					if(pumped)
+					{
+						uart_puts_P(PSTR("\r\n#P;"));
+						print_time2();
+						for(i=0; i<6; i++)
+						{
+							uint16_t schwelle = 0;
+							if(pump_on[i])
+							{
+								eeprom_read_block(&schwelle, &gpEEPROM[i].pump_on, sizeof(schwelle));
+								pump_on[i] = 0;
+							}
+							printf(";%u", schwelle);
+						}
 					}
 					mincount = 0;
-					printf(PSTR("\n"));
 				}
-				//else
-				//	mincount++;
+				else
+					mincount++;
 			}
 		}
 
@@ -307,7 +328,17 @@ void print_time(struct time_st *pTime)
 			pTime->hour, 
 			pTime->min, 
 			pTime->sec);
-}	
+}
+
+void print_time2()
+{
+	printf("20%02d-%02d-%02d %02d:%02d",
+				zeit.year,
+				zeit.month,
+				zeit.day,
+				zeit.hour,
+				zeit.min);
+}
 
 void set_time()
 {
