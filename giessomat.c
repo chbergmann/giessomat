@@ -162,38 +162,17 @@ void print_csv()
 {
 	int i;
 	unsigned char sec = 0;
-	char name[16];
 	uint32_t wsum[6];
 	char pump_on[6];
-	int mincount = 0;
+	int mincount = 1;
+	int print_header = 1;
 
 	uart_puts_P(PSTR("\r\nCSV output. Press ESC to end\r\n"));
 
-	while(zeit.sec != 0)
-	{
-		if(uart_is_rx())
-		{
-			char uart_in = uart_getchar();
-			if(uart_in == 0x1b)
-				return;
-		}
-	}
-
-	uart_puts_P(PSTR(";Zeit"));
 	for(i=0; i<6; i++)
 	{
-		get_flower_name(i, name);
-		printf(";%s", name);
 		wsum[i] = 0;
 		pump_on[i] = 0;
-	}
-	uart_puts_P(PSTR("\r\n#P;"));
-	print_time2();
-	for(i=0; i<6; i++)
-	{
-		uint16_t schwelle = 0;
-		eeprom_read_block(&schwelle, &gpEEPROM[i].pump_on, sizeof(schwelle));
-		printf(";%u", schwelle);
 	}
 
 	while(1)
@@ -213,6 +192,27 @@ void print_csv()
 
 			if(sec == 0)
 			{
+				if(print_header)
+				{
+					int i;
+					char name[16];
+					uart_puts_P(PSTR(";Zeit"));
+					for(i=0; i<6; i++)
+					{
+						get_flower_name(i, name);
+						printf(";%s", name);
+					}
+					uart_puts_P(PSTR("\r\n#P;"));
+					print_time2();
+					for(i=0; i<6; i++)
+					{
+						uint16_t schwelle = 0;
+						eeprom_read_block(&schwelle, &gpEEPROM[i].pump_on, sizeof(schwelle));
+						printf(";%u", schwelle);
+					}
+					print_header = 0;
+				}
+
 				if(mincount == 10)
 				{
 					int pumped = 0;
@@ -221,7 +221,8 @@ void print_csv()
 
 					for(i=0; i<6; i++)
 					{
-						uint32_t mw = wsum[i] / 600;
+						uint32_t mw = wsum[i] / 60;
+						mw = mw / mincount;
 						printf(";%u", (uint16_t)mw);
 						wsum[i] = 0;
 						if(pump_on[i])
@@ -242,7 +243,7 @@ void print_csv()
 							printf(";%u", schwelle);
 						}
 					}
-					mincount = 0;
+					mincount = 1;
 				}
 				else
 					mincount++;
@@ -254,6 +255,9 @@ void print_csv()
 			char uart_in = uart_getchar();
 			if(uart_in == 0x1b)
 				break;
+
+			if(uart_in == 'c')
+				print_header = 1;
 		}
 	}
 }
