@@ -94,6 +94,6 @@ toolchain-debian:
 	sudo apt-get install gcc-avr binutils-avr avr-libc
 
 fuses:
-	avrdude $(AVRDUDE_ARGS) -U lfuse:w:<0xEF>:m
-	avrdude $(AVRDUDE_ARGS) -U hfuse:w:<0xD9>:m
-	avrdude $(AVRDUDE_ARGS) -U efuse:w:<0xFF>:m
+	avrdude $(AVRDUDE_ARGS) -U lfuse:w:0xEF:m
+	avrdude $(AVRDUDE_ARGS) -U hfuse:w:0xD9:m
+	avrdude $(AVRDUDE_ARGS) -U efuse:w:0xFF:m
