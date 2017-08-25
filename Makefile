@@ -8,6 +8,8 @@ MCU = atmega8
 TARGET = giessomat.elf
 CC = avr-gcc
 
+AVRDUDE_ARGS=-p m8 -c avrispmkII -P usb
+
 ## Options common to compile, link and assembly rules
 COMMON = -mmcu=$(MCU)
 
@@ -71,7 +73,7 @@ $(TARGET): $(OBJECTS)
 ## Clean target
 .PHONY: clean
 clean:
-	-rm -rf $(OBJECTS) giessomat.elf dep/ giessomat.hex giessomat.eep
+	rm -rf $(OBJECTS) giessomat.elf dep/ giessomat.hex giessomat.eep
 
 ## Other dependencies
 -include $(shell mkdir dep 2>/dev/null) $(wildcard dep/*)
@@ -79,11 +81,19 @@ clean:
 #Programmer
 download: giessomat.hex
 	#avrdude -p m8 -c pony-stk200 -U flash:w:giessomat.hex:i
-	avrdude -p m8 -c avrispmkII -P usb -U eeprom:r:giessomat.eep:i
-	avrdude -p m8 -c avrispmkII -P usb -U flash:w:giessomat.hex:i
-	avrdude -p m8 -c avrispmkII -P usb -D -U eeprom:w:giessomat.eep:i
+	avrdude $(AVRDUDE_ARGS) -U eeprom:r:giessomat.eep:i
+	avrdude $(AVRDUDE_ARGS) -U flash:w:giessomat.hex:i
+	avrdude $(AVRDUDE_ARGS) -D -U eeprom:w:giessomat.eep:i
 	
 upload:
 	#avrdude -p m8 -c pony-stk200 -U flash:r:backup.hex:i
-	avrdude -p m8 -c avrispmkII -P usb -U flash:r:backup.hex:i
+	avrdude $(AVRDUDE_ARGS) -U flash:r:backup.hex:i
 
+#Install the avr toolchain in Debian or Ubuntu
+toolchain-debian:
+	sudo apt-get install gcc-avr binutils-avr avr-libc
+
+fuses:
+	avrdude $(AVRDUDE_ARGS) -U lfuse:w:<0xEF>:m
+	avrdude $(AVRDUDE_ARGS) -U hfuse:w:<0xD9>:m
+	avrdude $(AVRDUDE_ARGS) -U efuse:w:<0xFF>:m
