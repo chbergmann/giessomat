@@ -35,7 +35,18 @@ enum {
 };
 
 
-#define switch_multiplexer(port)	PORTC = (port)
+void switch_multiplexer(uint8_t port)
+{
+	PORTC = PORTC & 0xF8;
+    switch(port)
+    {
+    case 1: PORTC |= 4; break;
+    case 3: PORTC |= 6; break;
+    case 4: PORTC |= 1; break;
+    case 6: PORTC |= 3; break;
+    default: PORTC |= port; break;
+    }
+}
 
 volatile unsigned char current_port = 0;	// aktueller Multiplexer Eingang
 
